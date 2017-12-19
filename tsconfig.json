@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "ES6",
+        "module": "commonjs",
+        "strict": true
+    },
+    "exclude": [
+        "node_modules",
+        "**/node_modules/*"
+    ],
+    "files": [
+        "./node_modules/@types/node/index.d.ts",
+        "./node_modules/@types/express/index.d.ts",
+        "*.ts"
+    ]
+}
