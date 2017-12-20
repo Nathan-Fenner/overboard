@@ -3,32 +3,106 @@
 
 import * as express from 'express';
 
-class Coord {
-    public readonly x: number;
-    public readonly y: number;
+type Card = number;
 
-    static cache: {[s: string]: Coord} = {};
+class Deck {
+    private cards: Card[];
 
-    constructor(x: number, y: number) {
-        let k = x + "|" + y;
-        if (k in Coord.cache) {
-            return Coord.cache[k];
+    draw(): Card {
+        if (this.cards.length == 0) {
+            throw "cannot draw from empty deck";
         }
-        this.x = x;
-        this.y = y;
-        Coord.cache[k] = this;
+        let index = Math.random() * this.cards.length | 0;
+        let out = this.cards[index];
+        this.cards[index] = this.cards[this.cards.length-1];
+        this.cards.pop();
+        return out;
+    }
+    size(): number {
+        return this.cards.length;
+    }
+    insert(card: Card) {
+        this.cards.push(card);
     }
 }
 
+type Hand = {
+    cards: number[]
+};
 
+
+// Removes the hand from the deck.
+function drawHand(deck: Deck, count: number): Hand {
+    let hand: Hand = { cards: [] };
+    while (deck.size() > 0 && count > 0) {
+        hand.cards.push(deck.draw());
+        count--;
+    }
+    return hand;
+}
 
 type GameType = {
-    board: Map<Coord, number>,
+    playerDeck: Deck,
+    playerHand: Hand,
+    state:      "start" | "play",
+}
+
+const gameState: GameType = {
+    playerDeck: new Deck(),
+    playerHand: {cards:[]},
+    state:      "start",
 };
 
-const game: GameType = {
-    board: new Map(),
-};
+for (let i = 0; i < 7; i++) {
+    gameState.playerDeck.insert(i%2 + 1);
+}
+
+function startTurn() {
+    // draw the cards
+    if (gameState.state != "start") {
+        throw "invalid - game not in 'start' state";
+    }
+    gameState.playerHand = drawHand(gameState.playerDeck, 5);
+}
+
+function purchase3(handIndices: number[]) {
+    if (gameState.state != "play") {
+        throw "invalid - game not in 'play' state";
+    }
+    handIndices.sort();
+    let totalValue = 0;
+    for (let i = 0; i < handIndices.length; i++) {
+        if (handIndices.indexOf(handIndices[i]) < i) {
+            throw "invalid - duplicate selected card";
+        }
+        totalValue += handIndices[i];
+    }
+    if (totalValue < 4) {
+        throw "invalid - not enough money to buy a 3";
+    }
+    // must spend $4 to buy a 3
+    let unspentHand: Hand = {cards: []};
+    for (let i = 0; i < gameState.playerHand.cards.length; i++) {
+        if (handIndices.indexOf(i) < 0) {
+            unspentHand.cards.push(gameState.playerHand.cards[i]);
+        } else {
+            gameState.playerDeck.insert(gameState.playerHand.cards[i]);
+        }
+    }
+    gameState.playerDeck.insert(3);
+    gameState.playerHand = unspentHand;
+}
+
+function endTurn() {
+    if (gameState.state != "play") {
+        throw "invalid - game not in 'play' state";
+    }
+    // put the cards back
+    for (let card of gameState.playerHand.cards) {
+        gameState.playerDeck.insert(card);
+    }
+    gameState.playerHand = {cards: []};
+}
 
 const app = express();
 
