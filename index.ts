@@ -3,7 +3,7 @@ import * as bodyParser from 'body-parser';
 
 type RewardCard = {
     rewardType:     "beach" | "ocean" | "forest" | "starter";
-    rarityType:     "rare" | "common"
+    rarityType:     "rare" | "common";
     shipParts: number; // use towards end game
     provisions: number; // use towards end game
     energyStores: number; // shuffles into deck, use to buy future challenge cards 
@@ -13,7 +13,7 @@ type ChallengeCard = {
     challengeType: "beach" | "ocean" | "forest";
     challengeText: string;
     challengeOdds: number[]; //TODO
-    challengeOutcomes: Outcome;
+    challengeOutcomes: Outcome[];
 };
 
 type BonusCard = {
