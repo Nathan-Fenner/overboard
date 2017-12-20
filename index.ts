@@ -1,13 +1,13 @@
-
-"use strict";
-
 import * as express from 'express';
+import * as bodyParser from 'body-parser';
 
 type Card = number;
 
 class Deck {
     private cards: Card[];
-
+    constructor() {
+        this.cards = [];
+    }
     draw(): Card {
         if (this.cards.length == 0) {
             throw "cannot draw from empty deck";
@@ -57,15 +57,16 @@ for (let i = 0; i < 7; i++) {
     gameState.playerDeck.insert(i%2 + 1);
 }
 
-function startTurn() {
+function moveStart() {
     // draw the cards
     if (gameState.state != "start") {
         throw "invalid - game not in 'start' state";
     }
     gameState.playerHand = drawHand(gameState.playerDeck, 5);
+    gameState.state = "play";
 }
 
-function purchase3(handIndices: number[]) {
+function moveBuy3(handIndices: number[]) {
     if (gameState.state != "play") {
         throw "invalid - game not in 'play' state";
     }
@@ -93,7 +94,7 @@ function purchase3(handIndices: number[]) {
     gameState.playerHand = unspentHand;
 }
 
-function endTurn() {
+function moveEnd() {
     if (gameState.state != "play") {
         throw "invalid - game not in 'play' state";
     }
@@ -102,15 +103,46 @@ function endTurn() {
         gameState.playerDeck.insert(card);
     }
     gameState.playerHand = {cards: []};
+    gameState.state = "start";
 }
 
 const app = express();
+
+
+
+
+app.use(bodyParser.json());
+// app.use(app.router);
+
+app.get("/state", (req, res) => {
+    res.send(JSON.stringify({
+        hand: gameState.playerHand.cards,
+        deckSize: gameState.playerDeck.size(),
+        state: gameState.state,
+    }));
+});
+
+type Move = {move: "draw"} | {move: "end"} | {move: "buy3", using: number[]};
+  
+app.post("/move", (req, res, next) => {
+    let move: Move = req.body;
+    if (move.move == "draw") {
+        moveStart();
+    }
+    if (move.move == "end") {
+        moveEnd();
+    }
+    if (move.move == "buy3") {
+        moveBuy3(move.using);
+    }
+});
 
 app.get("/", (req, res) => {
     res.send("hello world");
 });
 
 app.use("/play.html", express.static("play.html"));
+app.use("/play.js", express.static("play.js"));
 
 app.listen(3000, () => {
     console.log("overboard is now listening on port 3000");
