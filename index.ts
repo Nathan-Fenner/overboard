@@ -1,14 +1,36 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
-type Card = number;
+type RewardCard = {
+    rewardType:     "beach" | "ocean" | "forest" | "starter";
+    rarityType:     "rare" | "common"
+    shipParts: number; // use towards end game
+    provisions: number; // use towards end game
+    energyStores: number; // shuffles into deck, use to buy future challenge cards 
+};
 
-class Deck {
-    private cards: Card[];
+type ChallengeCard = {
+    challengeType: "beach" | "ocean" | "forest";
+    challengeText: string;
+    challengeOdds: number[]; //TODO
+    challengeOutcomes: Outcome;
+};
+
+type BonusCard = {
+    bonusType: string;
+    bonusText: string;
+}
+
+type Outcome = {
+    outcomeType: "reward" | "bonus" | "discard" | "nothing";
+}
+
+class Deck<T> {
+    private cards: T[];
     constructor() {
         this.cards = [];
     }
-    draw(): Card {
+    draw(): T {
         if (this.cards.length == 0) {
             throw "cannot draw from empty deck";
         }
@@ -21,18 +43,18 @@ class Deck {
     size(): number {
         return this.cards.length;
     }
-    insert(card: Card) {
+    insert(card: T) {
         this.cards.push(card);
     }
 }
 
 type Hand = {
-    cards: number[]
+    cards: RewardCard[]
 };
 
 
 // Removes the hand from the deck.
-function drawHand(deck: Deck, count: number): Hand {
+function drawHand(deck: Deck<RewardCard>, count: number): Hand {
     let hand: Hand = { cards: [] };
     while (deck.size() > 0 && count > 0) {
         hand.cards.push(deck.draw());
@@ -42,7 +64,7 @@ function drawHand(deck: Deck, count: number): Hand {
 }
 
 type GameType = {
-    playerDeck: Deck,
+    playerDeck: Deck<RewardCard>,
     playerHand: Hand,
     state:      "start" | "play",
 }
@@ -54,7 +76,13 @@ const gameState: GameType = {
 };
 
 for (let i = 0; i < 7; i++) {
-    gameState.playerDeck.insert(i%2 + 1);
+    gameState.playerDeck.insert({
+        rewardType: "starter",
+        rarityType: "common",
+        provisions: 0,
+        shipParts: 0,
+        energyStores: (i%3)+1,
+    });
 }
 
 function moveStart() {
@@ -90,7 +118,13 @@ function moveBuy3(handIndices: number[]) {
             gameState.playerDeck.insert(gameState.playerHand.cards[i]);
         }
     }
-    gameState.playerDeck.insert(3);
+    gameState.playerDeck.insert({
+        rewardType: "starter",
+        rarityType: "rare",
+        provisions: 1,
+        shipParts: 1,
+        energyStores: 4,
+    });
     gameState.playerHand = unspentHand;
 }
 
