@@ -1,56 +1,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
-type RewardCard = {
-    rewardType:     "beach" | "ocean" | "forest" | "starter";
-    rarityType:     "rare" | "common";
-    shipParts: number; // use towards end game
-    provisions: number; // use towards end game
-    energyStores: number; // shuffles into deck, use to buy future challenge cards 
-};
-
-type ChallengeCard = {
-    challengeType: "beach" | "ocean" | "forest";
-    challengeText: string;
-    challengeOdds: number[]; //TODO
-    challengeOutcomes: Outcome[];
-};
-
-type BonusCard = {
-    bonusType: string;
-    bonusText: string;
-}
-
-type Outcome = {
-    outcomeType: "reward" | "bonus" | "discard" | "nothing";
-}
-
-class Deck<T> {
-    private cards: T[];
-    constructor() {
-        this.cards = [];
-    }
-    draw(): T {
-        if (this.cards.length == 0) {
-            throw "cannot draw from empty deck";
-        }
-        let index = Math.random() * this.cards.length | 0;
-        let out = this.cards[index];
-        this.cards[index] = this.cards[this.cards.length-1];
-        this.cards.pop();
-        return out;
-    }
-    size(): number {
-        return this.cards.length;
-    }
-    insert(card: T) {
-        this.cards.push(card);
-    }
-}
-
-type Hand = {
-    cards: RewardCard[]
-};
+import {Area, RewardCard, Deck, Hand, ChallengeCard, Move, ViewState} from './common';
 
 
 // Removes the hand from the deck.
@@ -63,16 +14,32 @@ function drawHand(deck: Deck<RewardCard>, count: number): Hand {
     return hand;
 }
 
-type GameType = {
-    playerDeck: Deck<RewardCard>,
-    playerHand: Hand,
-    state:      "start" | "play",
+type GameDrawState = {
+    type: "draw",
 }
 
-const gameState: GameType = {
+type GamePlayState = {
+    type: "play",
+    hand: Hand,
+    energy: number,
+}
+
+type GameState = GameDrawState | GamePlayState
+
+type Game = {
+    challengeDecks: {[area in Area]: Deck<ChallengeCard>},
+    playerDeck: Deck<RewardCard>,
+    state: GameState,
+}
+
+const gameState: Game = {
+    challengeDecks: {
+        beach: new Deck(),
+        ocean: new Deck(),
+        forest: new Deck(),
+    },
     playerDeck: new Deck(),
-    playerHand: {cards:[]},
-    state:      "start",
+    state: {type: "draw"},
 };
 
 for (let i = 0; i < 7; i++) {
@@ -87,37 +54,25 @@ for (let i = 0; i < 7; i++) {
 
 function moveStart() {
     // draw the cards
-    if (gameState.state != "start") {
-        throw "invalid - game not in 'start' state";
+    if (gameState.state.type != "draw") {
+        throw "invalid - game not in 'draw' state";
     }
-    gameState.playerHand = drawHand(gameState.playerDeck, 5);
-    gameState.state = "play";
+    let hand = drawHand(gameState.playerDeck, 5);
+    gameState.state = {
+        type: "play",
+        hand: hand,
+        energy: hand.cards.reduce((a, b) => a + b.energyStores, 0),
+    };
 }
 
-function moveBuy3(handIndices: number[]) {
-    if (gameState.state != "play") {
+function moveBuy3() {
+    if (gameState.state.type != "play") {
         throw "invalid - game not in 'play' state";
     }
-    handIndices.sort();
-    let totalValue = 0;
-    for (let i = 0; i < handIndices.length; i++) {
-        if (handIndices.indexOf(handIndices[i]) < i) {
-            throw "invalid - duplicate selected card";
-        }
-        totalValue += handIndices[i];
+    if (gameState.state.energy < 4) {
+        throw "invalid - not enough energy to buy a 3";
     }
-    if (totalValue < 4) {
-        throw "invalid - not enough money to buy a 3";
-    }
-    // must spend $4 to buy a 3
-    let unspentHand: Hand = {cards: []};
-    for (let i = 0; i < gameState.playerHand.cards.length; i++) {
-        if (handIndices.indexOf(i) < 0) {
-            unspentHand.cards.push(gameState.playerHand.cards[i]);
-        } else {
-            gameState.playerDeck.insert(gameState.playerHand.cards[i]);
-        }
-    }
+    gameState.state.energy -= 4;
     gameState.playerDeck.insert({
         rewardType: "starter",
         rarityType: "rare",
@@ -125,39 +80,43 @@ function moveBuy3(handIndices: number[]) {
         shipParts: 1,
         energyStores: 4,
     });
-    gameState.playerHand = unspentHand;
 }
 
 function moveEnd() {
-    if (gameState.state != "play") {
+    if (gameState.state.type != "play") {
         throw "invalid - game not in 'play' state";
     }
     // put the cards back
-    for (let card of gameState.playerHand.cards) {
+    for (let card of gameState.state.hand.cards) {
         gameState.playerDeck.insert(card);
     }
-    gameState.playerHand = {cards: []};
-    gameState.state = "start";
+    gameState.state = {type: "draw"};
 }
 
 const app = express();
 
-
-
-
 app.use(bodyParser.json());
-// app.use(app.router);
+
+function renderViewState(): ViewState {
+    if (gameState.state.type == "draw") {
+        return {
+            state: "draw",
+            deckSize: gameState.playerDeck.size()
+        };
+    } else {
+        return {
+            state: "play",
+            hand: gameState.state.hand,
+            deckSize: gameState.playerDeck.size(),
+        }
+    }
+}
+
 
 app.get("/state", (req, res) => {
-    res.send(JSON.stringify({
-        hand: gameState.playerHand.cards,
-        deckSize: gameState.playerDeck.size(),
-        state: gameState.state,
-    }));
+    res.send(JSON.stringify(renderViewState()));
 });
 
-type Move = {move: "draw"} | {move: "end"} | {move: "buy3", using: number[]};
-  
 app.post("/move", (req, res, next) => {
     let move: Move = req.body;
     if (move.move == "draw") {
@@ -167,7 +126,7 @@ app.post("/move", (req, res, next) => {
         moveEnd();
     }
     if (move.move == "buy3") {
-        moveBuy3(move.using);
+        moveBuy3();
     }
 });
 
@@ -181,3 +140,4 @@ app.use("/play.js", express.static("play.js"));
 app.listen(3000, () => {
     console.log("overboard is now listening on port 3000");
 });
+

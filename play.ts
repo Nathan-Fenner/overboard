@@ -1,4 +1,7 @@
 
+
+import {ViewState, Move} from './common';
+
 type VisibleState = {
     hand: number[],
     deckSize: number,
@@ -7,8 +10,6 @@ type VisibleState = {
 
 let viewElement = document.getElementById("gamestate") as HTMLDivElement;
 let startButton = document.getElementById("start-button") as HTMLButtonElement;
-
-type Move = {move: "draw"} | {move: "end"} | {move: "buy3", using: number[]};
 
 function makeMove(move: Move) {
     let req = new XMLHttpRequest();
