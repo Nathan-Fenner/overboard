@@ -21,10 +21,10 @@ export type RewardCard = {
 };
 
 export type ChallengeCard = {
+    challengeCost: number;
     challengeType: Area;
     challengeText: string;
-    challengeOdds: number[]; //TODO
-    challengeOutcomes: Outcome[];
+    challengeOutcomes: Outcome[]; 
 };
 
 export type Outcome = {
