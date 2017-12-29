@@ -47,6 +47,7 @@ type GameState = GameDrawState | GamePlayState
 type Game = {
     challengeDecks: {[area in Area]: Deck<ChallengeCard>},
     playerDeck: Deck<RewardCard>,
+    playerBonusDeck: Deck<BonusCard>,
     rewardDeck: Deck<RewardCard>,
     bonusDeck: Deck<BonusCard>,
     state: GameState,
@@ -59,6 +60,7 @@ const gameState: Game = {
         forest: new Deck(),
     },
     playerDeck: new Deck(),
+    playerBonusDeck: new Deck(),
     rewardDeck: new Deck(),
     bonusDeck: new Deck(),
     state: {type: "draw"},
@@ -101,13 +103,15 @@ function moveBuyChallenge(challenge: ChallengeCard) {
     let result = challenge.challengeOutcomes[outcome];
 
     if (result.outcomeType == "reward") {
-        drawReward(gameState.rewardDeck, challenge.challengeType);
+        let resultCard = drawReward(gameState.rewardDeck, challenge.challengeType);
+        gameState.playerDeck.insert(resultCard);
     }
     if (result.outcomeType == "bonus") {
-        drawBonus(gameState.bonusDeck, challenge.challengeType);
+        let bonusCard = drawBonus(gameState.bonusDeck, challenge.challengeType);
+        gameState.playerBonusDeck.insert(bonusCard);
     }
     if (result.outcomeType == "discard") {
-        //TO DO Discard
+        gameState.playerDeck.discardRandom();
     }
 }
 
