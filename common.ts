@@ -57,6 +57,11 @@ export class Deck<T> {
     insert(card: T) {
         this.cards.push(card);
     }
+    discardRandom() {
+        let index = Math.random() * this.cards.length | 0;
+        this.cards[index] = this.cards[this.cards.length-1];
+        this.cards.pop();
+    }
 }
 
 export type Hand = {
