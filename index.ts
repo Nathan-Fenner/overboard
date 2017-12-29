@@ -1,7 +1,7 @@
 import * as express from 'express';
 import * as bodyParser from 'body-parser';
 
-import {Area, RewardCard, Deck, Hand, ChallengeCard, Move, ViewState} from './common';
+import {Area, RewardCard, BonusCard, Deck, Hand, ChallengeCard, Move, ViewState} from './common';
 
 
 // Removes the hand from the deck.
@@ -12,6 +12,24 @@ function drawHand(deck: Deck<RewardCard>, count: number): Hand {
         count--;
     }
     return hand;
+}
+
+function drawBonus(deck: Deck<BonusCard>, type: Area) {
+    let bonus = deck.draw();
+    while (bonus.bonusType != type){
+        deck.insert(bonus);
+        bonus = deck.draw();
+    }
+    return bonus;
+}
+
+function drawReward(deck: Deck<RewardCard>, type: Area) {
+    let reward = deck.draw();
+    while (reward.rewardType != type){
+        deck.insert(reward);
+        reward = deck.draw();
+    }
+    return reward;
 }
 
 type GameDrawState = {
@@ -29,6 +47,8 @@ type GameState = GameDrawState | GamePlayState
 type Game = {
     challengeDecks: {[area in Area]: Deck<ChallengeCard>},
     playerDeck: Deck<RewardCard>,
+    rewardDeck: Deck<RewardCard>,
+    bonusDeck: Deck<BonusCard>,
     state: GameState,
 }
 
@@ -39,6 +59,8 @@ const gameState: Game = {
         forest: new Deck(),
     },
     playerDeck: new Deck(),
+    rewardDeck: new Deck(),
+    bonusDeck: new Deck(),
     state: {type: "draw"},
 };
 
@@ -63,6 +85,30 @@ function moveStart() {
         hand: hand,
         energy: hand.cards.reduce((a, b) => a + b.energyStores, 0),
     };
+}
+
+function moveBuyChallenge(challenge: ChallengeCard) {
+    if (gameState.state.type != "play"){
+        throw "invalid - game not in 'play' state";
+    }
+    // verify user has enough energy
+    if (gameState.state.energy < challenge.challengeCost) {
+        throw "invalid - not enough engergy to buy this challenge"
+    }
+    gameState.state.energy -= challenge.challengeCost;
+    // Choose an outcome
+    let outcome = Math.random() * challenge.challengeOutcomes.length | 0;
+    let result = challenge.challengeOutcomes[outcome];
+
+    if (result.outcomeType == "reward") {
+        drawReward(gameState.rewardDeck, challenge.challengeType);
+    }
+    if (result.outcomeType == "bonus") {
+        drawBonus(gameState.bonusDeck, challenge.challengeType);
+    }
+    if (result.outcomeType == "discard") {
+        //TO DO Discard
+    }
 }
 
 function moveBuy3() {
