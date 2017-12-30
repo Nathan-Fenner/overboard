@@ -271,6 +271,12 @@ function createTestBonus(){
     })
 }
 
+
+createTestBonus();
+createTestForest();
+createTestOcean();
+createTestBeach();
+
 function moveStart() {
     // draw the cards
     if (gameState.state.type != "draw") {
