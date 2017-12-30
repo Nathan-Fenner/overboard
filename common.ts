@@ -1,16 +1,16 @@
 export type Area = "beach" | "ocean" | "forest";
 
 export type ViewState = {
-    state: "draw",
-    deckSize: number,
-} | {
-    state: "play",
-    hand: Hand,
-    deckSize: number,
+    playerDeckSize: number,
+    playerHand: RewardCard[],
+    playerEnergy: number,
+    challengeDeckSizes: {
+        [area in Area]: number
+    },
+    mode: "draw" | "play",
 };
 
 export type Move = {move: "draw"} | {move: "end"} | {move: "buy", area: Area};
-
 
 export type RewardCard = {
     rewardType:     Area | "starter";
@@ -67,5 +67,3 @@ export class Deck<T> {
 export type Hand = {
     cards: RewardCard[]
 };
-
-
