@@ -9,7 +9,7 @@ export type ViewState = {
     deckSize: number,
 };
 
-export type Move = {move: "draw"} | {move: "end"} | {move: "buy3", using: number[]};
+export type Move = {move: "draw"} | {move: "end"} | {move: "buy", area: Area};
 
 
 export type RewardCard = {

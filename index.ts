@@ -115,23 +115,6 @@ function moveBuyChallenge(challenge: ChallengeCard) {
     }
 }
 
-function moveBuy3() {
-    if (gameState.state.type != "play") {
-        throw "invalid - game not in 'play' state";
-    }
-    if (gameState.state.energy < 4) {
-        throw "invalid - not enough energy to buy a 3";
-    }
-    gameState.state.energy -= 4;
-    gameState.playerDeck.insert({
-        rewardType: "starter",
-        rarityType: "rare",
-        provisions: 1,
-        shipParts: 1,
-        energyStores: 4,
-    });
-}
-
 function moveEnd() {
     if (gameState.state.type != "play") {
         throw "invalid - game not in 'play' state";
@@ -175,8 +158,8 @@ app.post("/move", (req, res, next) => {
     if (move.move == "end") {
         moveEnd();
     }
-    if (move.move == "buy3") {
-        moveBuy3();
+    if (move.move == "buy") {
+        moveBuyChallenge(gameState.challengeDecks[move.area].draw());
     }
 });
 
