@@ -37,7 +37,7 @@ export type BonusCard = {
 }
 
 export class Deck<T> {
-    private cards: T[];
+    cards: T[];
     constructor() {
         this.cards = [];
     }

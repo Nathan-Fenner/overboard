@@ -76,6 +76,201 @@ for (let i = 0; i < 7; i++) {
     });
 }
 
+function createTestBeach() {
+    gameState.challengeDecks.beach.insert({
+        challengeCost: 2,
+        challengeType: "beach",
+        challengeText: "This is a test beach card 1.",
+        challengeOutcomes: [{outcomeType: "discard"}, {outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+    gameState.challengeDecks.beach.insert({
+        challengeCost: 3,
+        challengeType: "beach",
+        challengeText: "This is a test beach card 2.",
+        challengeOutcomes: [{outcomeType: "nothing"}, {outcomeType: "nothing"}, {outcomeType: "reward"} ],
+    })
+    gameState.challengeDecks.beach.insert({
+        challengeCost: 5,
+        challengeType: "beach",
+        challengeText: "This is a test beach card 3.",
+        challengeOutcomes: [{outcomeType: "bonus"}, {outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+    gameState.challengeDecks.beach.insert({
+        challengeCost: 7,
+        challengeType: "beach",
+        challengeText: "This is a test beach card 4.",
+        challengeOutcomes: [{outcomeType: "reward"}, {outcomeType: "reward"}, {outcomeType: "reward"} ],
+    })
+    gameState.challengeDecks.beach.insert({
+        challengeCost: 8,
+        challengeType: "beach",
+        challengeText: "This is a test beach card. 5",
+        challengeOutcomes: [{outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+}
+
+function createTestOcean() {
+    gameState.challengeDecks.ocean.insert({
+        challengeCost: 2,
+        challengeType: "ocean",
+        challengeText: "This is a test ocean card 1.",
+        challengeOutcomes: [{outcomeType: "discard"}, {outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+    gameState.challengeDecks.ocean.insert({
+        challengeCost: 3,
+        challengeType: "ocean",
+        challengeText: "This is a test ocean card 2.",
+        challengeOutcomes: [{outcomeType: "nothing"}, {outcomeType: "nothing"}, {outcomeType: "reward"} ],
+    })
+    gameState.challengeDecks.ocean.insert({
+        challengeCost: 5,
+        challengeType: "ocean",
+        challengeText: "This is a test ocean card 3.",
+        challengeOutcomes: [{outcomeType: "bonus"}, {outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+    gameState.challengeDecks.ocean.insert({
+        challengeCost: 7,
+        challengeType: "ocean",
+        challengeText: "This is a test ocean card 4.",
+        challengeOutcomes: [{outcomeType: "reward"}, {outcomeType: "reward"}, {outcomeType: "reward"} ],
+    })
+    gameState.challengeDecks.ocean.insert({
+        challengeCost: 8,
+        challengeType: "ocean",
+        challengeText: "This is a shark.",
+        challengeOutcomes: [{outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+}
+
+function createTestForest() {
+    gameState.challengeDecks.forest.insert({
+        challengeCost: 2,
+        challengeType: "forest",
+        challengeText: "This is a test forest card 1.",
+        challengeOutcomes: [{outcomeType: "discard"}, {outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+    gameState.challengeDecks.forest.insert({
+        challengeCost: 3,
+        challengeType: "forest",
+        challengeText: "This is a test forest card 2.",
+        challengeOutcomes: [{outcomeType: "nothing"}, {outcomeType: "nothing"}, {outcomeType: "reward"} ],
+    })
+    gameState.challengeDecks.forest.insert({
+        challengeCost: 5,
+        challengeType: "forest",
+        challengeText: "This is a test forest card 3.",
+        challengeOutcomes: [{outcomeType: "bonus"}, {outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+    gameState.challengeDecks.forest.insert({
+        challengeCost: 7,
+        challengeType: "forest",
+        challengeText: "This is a test forest card 4.",
+        challengeOutcomes: [{outcomeType: "reward"}, {outcomeType: "reward"}, {outcomeType: "reward"} ],
+    })
+    gameState.challengeDecks.forest.insert({
+        challengeCost: 8,
+        challengeType: "forest",
+        challengeText: "This is a test forest card. 5",
+        challengeOutcomes: [{outcomeType: "reward"}, {outcomeType: "discard"} ],
+    })
+}
+
+function createTestReward() {
+    gameState.rewardDeck.insert({
+        rewardType:     "beach",
+        rarityType:     "common",
+        shipParts: 0, // use towards end game
+        provisions: 0, // use towards end game
+        energyStores: 12,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "beach",
+        rarityType:     "rare",
+        shipParts: 32, // use towards end game
+        provisions: 393, // use towards end game
+        energyStores: 9001,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "ocean",
+        rarityType:     "common",
+        shipParts: 0, // use towards end game
+        provisions: 1, // use towards end game
+        energyStores: 0,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "ocean",
+        rarityType:     "rare",
+        shipParts: 3000, // use towards end game
+        provisions: 100, // use towards end game
+        energyStores: 120,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "forest",
+        rarityType:     "common",
+        shipParts: 30, // use towards end game
+        provisions: 0, // use towards end game
+        energyStores: 0,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "forest",
+        rarityType:     "rare",
+        shipParts: 100, // use towards end game
+        provisions: 20, // use towards end game
+        energyStores: -12,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "ocean",
+        rarityType:     "common",
+        shipParts: 0, // use towards end game
+        provisions: 0, // use towards end game
+        energyStores: 12,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "beach",
+        rarityType:     "common",
+        shipParts: 0, // use towards end game
+        provisions: 2, // use towards end game
+        energyStores: 2,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "forest",
+        rarityType:     "common",
+        shipParts: 2, // use towards end game
+        provisions: 2, // use towards end game
+        energyStores: 2,
+    })
+    gameState.rewardDeck.insert({
+        rewardType:     "beach",
+        rarityType:     "common",
+        shipParts: 0, // use towards end game
+        provisions: 0, // use towards end game
+        energyStores: 1,
+    })
+}
+
+function createTestBonus(){
+    gameState.bonusDeck.insert({
+        bonusType: "Anti-Shark Mechanism",
+        bonusText: "Wow! This really sharp object will really help me keep sharks away!",
+    })
+    gameState.bonusDeck.insert({
+        bonusType: "Anti-Shark Mechanism",
+        bonusText: "Wow! This really sharp object will really help me keep sharks away!",
+    })
+    gameState.bonusDeck.insert({
+        bonusType: "Anti-Shark Mechanism",
+        bonusText: "Wow! This really sharp object will really help me keep sharks away!",
+    })
+    gameState.bonusDeck.insert({
+        bonusType: "Anti-Shark Mechanism",
+        bonusText: "Wow! This really sharp object will really help me keep sharks away!",
+    })
+    gameState.bonusDeck.insert({
+        bonusType: "Anti-Shark Mechanism",
+        bonusText: "Wow! This really sharp object will really help me keep sharks away!",
+    })
+}
+
 function moveStart() {
     // draw the cards
     if (gameState.state.type != "draw") {
@@ -101,6 +296,13 @@ function moveBuyChallenge(challenge: ChallengeCard) {
     // Choose an outcome
     let outcome = Math.random() * challenge.challengeOutcomes.length | 0;
     let result = challenge.challengeOutcomes[outcome];
+
+    if (challenge.challengeText = "This is a shark.") {
+        if (gameState.playerBonusDeck.cards.some(card => card.bonusType == "Anti-Shark Mechanism")) {
+            result.outcomeType = "reward";
+        }
+
+    } // shark provision
 
     if (result.outcomeType == "reward") {
         let resultCard = drawReward(gameState.rewardDeck, challenge.challengeType);
