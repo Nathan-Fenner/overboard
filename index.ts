@@ -32,19 +32,19 @@ function drawReward(deck: Deck<RewardCard>, type: Area) {
     return reward;
 }
 
-function maintainAvailable(available: {[area in Area]: Deck<ChallengeCard>}, challenges: {[area in Area]: Deck<ChallengeCard>}) {
+function maintainAvailable(available: {[area in Area]: ChallengeCard[]}, challenges: {[area in Area]: Deck<ChallengeCard>}) {
     let full = 3;
-    while (available.beach.size() < full && challenges.beach.size() > 0) {
+    while (available.beach.length < full && challenges.beach.size() > 0) {
         let drawn = challenges.beach.draw();
-        available.beach.insert(drawn);
+        available.beach.push(drawn);
     }
-    while (available.ocean.size() < full && challenges.ocean.size() > 0) {
+    while (available.ocean.length < full && challenges.ocean.size() > 0) {
         let drawn = challenges.ocean.draw();
-        available.ocean.insert(drawn);
+        available.ocean.push(drawn);
     }
-    while (available.forest.size() < full && challenges.forest.size() > 0) {
+    while (available.forest.length < full && challenges.forest.size() > 0) {
         let drawn = challenges.forest.draw();
-        available.forest.insert(drawn);
+        available.forest.push(drawn);
     }
 }
 
@@ -62,7 +62,7 @@ type GameState = GameDrawState | GamePlayState
 
 type Game = {
     challengeDecks: {[area in Area]: Deck<ChallengeCard>},
-    availableChallenges: {[area in Area]: Deck<ChallengeCard>},
+    availableChallenges: {[area in Area]: ChallengeCard[]},
     playerDeck: Deck<RewardCard>,
     playerBonusDeck: Deck<BonusCard>,
     rewardDeck: Deck<RewardCard>,
@@ -77,9 +77,9 @@ const gameState: Game = {
         forest: new Deck(),
     },
     availableChallenges: {
-        beach: new Deck(),
-        ocean: new Deck(),
-        forest: new Deck(),
+        beach: [],
+        ocean: [],
+        forest: [],
     },
     playerDeck: new Deck(),
     playerBonusDeck: new Deck(),
@@ -300,7 +300,7 @@ function moveStart() {
         throw "invalid - game not in 'draw' state";
     }
     let hand = drawHand(gameState.playerDeck, 5);
-    maintainAvailable(gameState.availableChallenges, gameState.challengeDecks);
+    
     gameState.state = {
         type: "play",
         hand: hand,
