@@ -32,6 +32,22 @@ function drawReward(deck: Deck<RewardCard>, type: Area) {
     return reward;
 }
 
+function maintainAvailable(available: {[area in Area]: ChallengeCard[]}, challenges: {[area in Area]: Deck<ChallengeCard>}) {
+    let full = 3;
+    while (available.beach.length < full && challenges.beach.size() > 0) {
+        let drawn = challenges.beach.draw();
+        available.beach.push(drawn);
+    }
+    while (available.ocean.length < full && challenges.ocean.size() > 0) {
+        let drawn = challenges.ocean.draw();
+        available.ocean.push(drawn);
+    }
+    while (available.forest.length < full && challenges.forest.size() > 0) {
+        let drawn = challenges.forest.draw();
+        available.forest.push(drawn);
+    }
+}
+
 type GameDrawState = {
     type: "draw",
 }
@@ -46,6 +62,7 @@ type GameState = GameDrawState | GamePlayState
 
 type Game = {
     challengeDecks: {[area in Area]: Deck<ChallengeCard>},
+    availableChallenges: {[area in Area]: ChallengeCard[]},
     playerDeck: Deck<RewardCard>,
     playerBonusDeck: Deck<BonusCard>,
     rewardDeck: Deck<RewardCard>,
@@ -58,6 +75,11 @@ const gameState: Game = {
         beach: new Deck(),
         ocean: new Deck(),
         forest: new Deck(),
+    },
+    availableChallenges: {
+        beach: [],
+        ocean: [],
+        forest: [],
     },
     playerDeck: new Deck(),
     playerBonusDeck: new Deck(),
@@ -74,6 +96,7 @@ for (let i = 0; i < 7; i++) {
         shipParts: 0,
         energyStores: (i%3)+1,
     });
+    maintainAvailable(gameState.availableChallenges, gameState.challengeDecks);
 }
 
 function createTestBeach() {
@@ -283,6 +306,7 @@ function moveStart() {
         throw "invalid - game not in 'draw' state";
     }
     let hand = drawHand(gameState.playerDeck, 5);
+    
     gameState.state = {
         type: "play",
         hand: hand,
