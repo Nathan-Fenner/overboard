@@ -1,15 +1,5 @@
 
-
-import {ViewState, Move} from './common';
-
-type VisibleState = {
-    hand: number[],
-    deckSize: number,
-    state: "start" | "play",
-}
-
-let viewElement = document.getElementById("gamestate") as HTMLDivElement;
-let startButton = document.getElementById("start-button") as HTMLButtonElement;
+import {ViewState, Move, Area} from './common';
 
 function makeMove(move: Move) {
     let req = new XMLHttpRequest();
@@ -18,21 +8,58 @@ function makeMove(move: Move) {
     req.send(JSON.stringify(move));
 }
 
-startButton.addEventListener("click", e => {
-    makeMove({move: "draw"});
-});
+function updateDisplay(view: ViewState) {
+    const elements = {
+        oceanChallengeCount: null as any as HTMLDivElement,
+        forestChallengeCount: null as any as HTMLDivElement,
+        beachChallengeCount: null as any as HTMLDivElement,
+        oceanChallengeAttempt: null as any as HTMLButtonElement,
+        forestChallengeAttempt: null as any as HTMLButtonElement,
+        beachChallengeAttempt: null as any as HTMLButtonElement,
 
-function updateDisplay() {
-    let req = new XMLHttpRequest();
-    req.open("GET", "/state", false); // TODO: async
-    req.send();
-    let view = JSON.parse(req.responseText) as VisibleState;
+        remainingEnergy: null as any as HTMLDivElement,
+        playerDeckSize: null as any as HTMLDivElement,
+        playerHand: null as any as HTMLDivElement,
+        drawAttempt: null as any as HTMLButtonElement,
+    };
+    for (let id in elements) {
+        (elements as any)[id] = document.getElementById(id);
+    }
 
-    viewElement.innerText = `Current State: ${view.state}. Your hand is [${view.hand.join()}]. Your deck has ${view.deckSize} other cards.`;
-    startButton.hidden = view.state != "start";
+    elements.beachChallengeCount.innerText = `The beach has ${view.challengeDeckSizes.beach} remaining challenges.`;
+    elements.oceanChallengeCount.innerText = `The ocean has ${view.challengeDeckSizes.ocean} remaining challenges.`;
+    elements.forestChallengeCount.innerText = `The forest has ${view.challengeDeckSizes.forest} remaining challenges.`;
+    
+    elements.remainingEnergy.innerText = `You have ${view.playerEnergy} unspent energy this turn.`;
+
+    elements.playerDeckSize.innerText = `Your deck has ${view.playerDeckSize} cards.`;
+
+    if (view.mode == "draw") {
+        elements.playerHand.innerText = "Draw your hand!";
+        elements.drawAttempt.hidden = false;
+        elements.drawAttempt.onclick = () => makeMove({move: "draw"});
+        elements.beachChallengeAttempt.hidden = true;
+        elements.oceanChallengeAttempt.hidden = true;
+        elements.forestChallengeAttempt.hidden = true;
+    } else {
+        elements.playerHand.innerText = view.playerHand.map(card => JSON.stringify(card)).join("  ;;; ");
+        elements.drawAttempt.hidden = true;
+        elements.beachChallengeAttempt.hidden = false;
+        elements.oceanChallengeAttempt.hidden = false;
+        elements.forestChallengeAttempt.hidden = false;
+        elements.beachChallengeAttempt.onclick = () => makeMove({move: "buy", area: "beach"});
+        elements.oceanChallengeAttempt.onclick = () => makeMove({move: "buy", area: "ocean"});
+        elements.forestChallengeAttempt.onclick = () => makeMove({move: "buy", area: "forest"});
+    }
 }
 
 setInterval(() => {
-    updateDisplay();
+    let req = new XMLHttpRequest();
+    req.open("GET", "/state");
+    req.send();
+    req.onload = () => {
+        // TODO: guarantee in-order application.
+        updateDisplay(JSON.parse(req.responseText));
+    };
 }, 1000);
 

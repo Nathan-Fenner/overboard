@@ -271,6 +271,12 @@ function createTestBonus(){
     })
 }
 
+
+createTestBonus();
+createTestForest();
+createTestOcean();
+createTestBeach();
+
 function moveStart() {
     // draw the cards
     if (gameState.state.type != "draw") {
@@ -335,15 +341,28 @@ app.use(bodyParser.json());
 function renderViewState(): ViewState {
     if (gameState.state.type == "draw") {
         return {
-            state: "draw",
-            deckSize: gameState.playerDeck.size()
+            playerDeckSize: gameState.playerDeck.size(),
+            playerHand: [],
+            playerEnergy: 0,
+            challengeDeckSizes: {
+                forest: gameState.challengeDecks.forest.size(),
+                beach: gameState.challengeDecks.beach.size(),
+                ocean: gameState.challengeDecks.ocean.size(),
+            },
+            mode: "draw",
         };
     } else {
         return {
-            state: "play",
-            hand: gameState.state.hand,
-            deckSize: gameState.playerDeck.size(),
-        }
+            playerDeckSize: gameState.playerDeck.size(),
+            playerHand: gameState.state.hand.cards,
+            playerEnergy: gameState.state.energy,
+            challengeDeckSizes: {
+                forest: gameState.challengeDecks.forest.size(),
+                beach: gameState.challengeDecks.beach.size(),
+                ocean: gameState.challengeDecks.ocean.size(),
+            },
+            mode: "play",
+        };
     }
 }
 
