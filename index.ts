@@ -152,6 +152,20 @@ function moveStart() {
     };
 }
 
+function moveChoose(area: Area, position: number) {
+    if (gameState.state.type != "play") {
+        throw "invalid = game not in 'play' state";
+    }
+    let choice = gameState.availableChallenges[area][position]
+    gameState.state = {
+        type: "end",
+        hand: gameState.state.hand,
+        energy: gameState.state.energy,
+        chosen: choice
+
+    }
+}
+
 function moveEnd() {
     if (gameState.state.type != "end") {
         throw "invalid - game not in 'end' state";
@@ -225,8 +239,8 @@ app.post("/move", (req, res, next) => {
     if (move.move == "end") {
         moveEnd();
     }
-    if (move.move == "buy") {
-        moveBuyChallenge(gameState.challengeDecks[move.area].draw());
+    if (move.move == "choose") {
+        moveChoose(move.area, move.position);
     }
 });
 
