@@ -7,7 +7,10 @@ export type ViewState = {
     challengeDeckSizes: {
         [area in Area]: number
     },
-    mode: "draw" | "play",
+    mode: "draw" | "play" | "end",
+    availableChallenges: {
+        [area in Area]: ChallengeCard[]
+    },
 };
 
 export type Move = {move: "draw"} | {move: "end"} | {move: "buy", area: Area};
