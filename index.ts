@@ -58,7 +58,14 @@ type GamePlayState = {
     energy: number,
 }
 
-type GameState = GameDrawState | GamePlayState
+type GameEndState = {
+    type: "end",
+    hand: Hand,
+    energy: number,
+    chosen: ChallengeCard,
+}
+
+type GameState = GameDrawState | GamePlayState | GameEndState
 
 type Game = {
     challengeDecks: {[area in Area]: Deck<ChallengeCard>},
@@ -99,6 +106,145 @@ for (let i = 0; i < 7; i++) {
     maintainAvailable(gameState.availableChallenges, gameState.challengeDecks);
 }
 
+function moveBuyChallenge(challenge: ChallengeCard) {
+    if (gameState.state.type != "play"){
+        throw "invalid - game not in 'play' state";
+    }
+    // verify user has enough energy
+    if (gameState.state.energy < challenge.challengeCost) {
+        throw "invalid - not enough engergy to buy this challenge"
+    }
+    gameState.state.energy -= challenge.challengeCost;
+    // Choose an outcome
+    let outcome = Math.random() * challenge.challengeOutcomes.length | 0;
+    let result = challenge.challengeOutcomes[outcome];
+
+    if (challenge.challengeText = "This is a shark.") {
+        if (gameState.playerBonusDeck.cards.some(card => card.bonusType == "Anti-Shark Mechanism")) {
+            result.outcomeType = "reward";
+        }
+
+    } // shark provision
+
+    if (result.outcomeType == "reward") {
+        let resultCard = drawReward(gameState.rewardDeck, challenge.challengeType);
+        gameState.playerDeck.insert(resultCard);
+    }
+    if (result.outcomeType == "bonus") {
+        let bonusCard = drawBonus(gameState.bonusDeck, challenge.challengeType);
+        gameState.playerBonusDeck.insert(bonusCard);
+    }
+    if (result.outcomeType == "discard") {
+        gameState.playerDeck.discardRandom();
+    }
+}
+
+function moveStart() {
+    // draw the cards
+    if (gameState.state.type != "draw") {
+        throw "invalid - game not in 'draw' state";
+    }
+    let hand = drawHand(gameState.playerDeck, 5);
+    gameState.state = {
+        type: "play",
+        hand: hand,
+        energy: hand.cards.reduce((a, b) => a + b.energyStores, 0),
+    };
+}
+
+function moveEnd() {
+    if (gameState.state.type != "end") {
+        throw "invalid - game not in 'end' state";
+    }
+    // take chosen and process it
+    moveBuyChallenge(gameState.state.chosen);
+    // put the cards back
+    for (let card of gameState.state.hand.cards) {
+        gameState.playerDeck.insert(card);
+    }
+    gameState.state = {type: "draw"};
+}
+
+const app = express();
+
+app.use(bodyParser.json());
+
+function renderViewState(): ViewState {
+    if (gameState.state.type == "draw") {
+        return {
+            playerDeckSize: gameState.playerDeck.size(),
+            playerHand: [],
+            playerEnergy: 0,
+            challengeDeckSizes: {
+                forest: gameState.challengeDecks.forest.size(),
+                beach: gameState.challengeDecks.beach.size(),
+                ocean: gameState.challengeDecks.ocean.size(),
+            },
+            mode: "draw",
+            availableChallenges: gameState.availableChallenges,
+        };
+    } else if (gameState.state.type == "play") {
+        return {
+            playerDeckSize: gameState.playerDeck.size(),
+            playerHand: gameState.state.hand.cards,
+            playerEnergy: gameState.state.energy,
+            challengeDeckSizes: {
+                forest: gameState.challengeDecks.forest.size(),
+                beach: gameState.challengeDecks.beach.size(),
+                ocean: gameState.challengeDecks.ocean.size(),
+            },
+            mode: "end",
+            availableChallenges: gameState.availableChallenges,
+        };
+    } else {
+        return {
+            playerDeckSize: gameState.playerDeck.size(),
+            playerHand: gameState.state.hand.cards,
+            playerEnergy: gameState.state.energy,
+            challengeDeckSizes: {
+                forest: gameState.challengeDecks.forest.size(),
+                beach: gameState.challengeDecks.beach.size(),
+                ocean: gameState.challengeDecks.ocean.size(),
+            },
+            mode: "draw",
+            availableChallenges: gameState.availableChallenges, 
+        };
+    }
+}
+
+
+app.get("/state", (req, res) => {
+    res.send(JSON.stringify(renderViewState()));
+});
+
+app.post("/move", (req, res, next) => {
+    let move: Move = req.body;
+    if (move.move == "draw") {
+        moveStart();
+    }
+    if (move.move == "end") {
+        moveEnd();
+    }
+    if (move.move == "buy") {
+        moveBuyChallenge(gameState.challengeDecks[move.area].draw());
+    }
+});
+
+app.get("/", (req, res) => {
+    res.send("hello world");
+});
+
+app.use("/play.html", express.static("play.html"));
+app.use("/play.js", express.static("play.js"));
+
+app.listen(3000, () => {
+    console.log("overboard is now listening on port 3000");
+});
+
+
+/////////////////////////////////////////////////////////
+//Test Items//
+/////////////////////////////////////////////////////////
 function createTestBeach() {
     gameState.challengeDecks.beach.insert({
         challengeCost: 2,
@@ -299,123 +445,4 @@ createTestBonus();
 createTestForest();
 createTestOcean();
 createTestBeach();
-
-function moveStart() {
-    // draw the cards
-    if (gameState.state.type != "draw") {
-        throw "invalid - game not in 'draw' state";
-    }
-    let hand = drawHand(gameState.playerDeck, 5);
-    
-    gameState.state = {
-        type: "play",
-        hand: hand,
-        energy: hand.cards.reduce((a, b) => a + b.energyStores, 0),
-    };
-}
-
-function moveBuyChallenge(challenge: ChallengeCard) {
-    if (gameState.state.type != "play"){
-        throw "invalid - game not in 'play' state";
-    }
-    // verify user has enough energy
-    if (gameState.state.energy < challenge.challengeCost) {
-        throw "invalid - not enough engergy to buy this challenge"
-    }
-    gameState.state.energy -= challenge.challengeCost;
-    // Choose an outcome
-    let outcome = Math.random() * challenge.challengeOutcomes.length | 0;
-    let result = challenge.challengeOutcomes[outcome];
-
-    if (challenge.challengeText = "This is a shark.") {
-        if (gameState.playerBonusDeck.cards.some(card => card.bonusType == "Anti-Shark Mechanism")) {
-            result.outcomeType = "reward";
-        }
-
-    } // shark provision
-
-    if (result.outcomeType == "reward") {
-        let resultCard = drawReward(gameState.rewardDeck, challenge.challengeType);
-        gameState.playerDeck.insert(resultCard);
-    }
-    if (result.outcomeType == "bonus") {
-        let bonusCard = drawBonus(gameState.bonusDeck, challenge.challengeType);
-        gameState.playerBonusDeck.insert(bonusCard);
-    }
-    if (result.outcomeType == "discard") {
-        gameState.playerDeck.discardRandom();
-    }
-}
-
-function moveEnd() {
-    if (gameState.state.type != "play") {
-        throw "invalid - game not in 'play' state";
-    }
-    // put the cards back
-    for (let card of gameState.state.hand.cards) {
-        gameState.playerDeck.insert(card);
-    }
-    gameState.state = {type: "draw"};
-}
-
-const app = express();
-
-app.use(bodyParser.json());
-
-function renderViewState(): ViewState {
-    if (gameState.state.type == "draw") {
-        return {
-            playerDeckSize: gameState.playerDeck.size(),
-            playerHand: [],
-            playerEnergy: 0,
-            challengeDeckSizes: {
-                forest: gameState.challengeDecks.forest.size(),
-                beach: gameState.challengeDecks.beach.size(),
-                ocean: gameState.challengeDecks.ocean.size(),
-            },
-            mode: "draw",
-        };
-    } else {
-        return {
-            playerDeckSize: gameState.playerDeck.size(),
-            playerHand: gameState.state.hand.cards,
-            playerEnergy: gameState.state.energy,
-            challengeDeckSizes: {
-                forest: gameState.challengeDecks.forest.size(),
-                beach: gameState.challengeDecks.beach.size(),
-                ocean: gameState.challengeDecks.ocean.size(),
-            },
-            mode: "play",
-        };
-    }
-}
-
-
-app.get("/state", (req, res) => {
-    res.send(JSON.stringify(renderViewState()));
-});
-
-app.post("/move", (req, res, next) => {
-    let move: Move = req.body;
-    if (move.move == "draw") {
-        moveStart();
-    }
-    if (move.move == "end") {
-        moveEnd();
-    }
-    if (move.move == "buy") {
-        moveBuyChallenge(gameState.challengeDecks[move.area].draw());
-    }
-});
-
-app.get("/", (req, res) => {
-    res.send("hello world");
-});
-
-app.use("/play.html", express.static("play.html"));
-app.use("/play.js", express.static("play.js"));
-
-app.listen(3000, () => {
-    console.log("overboard is now listening on port 3000");
-});
 
